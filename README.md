@@ -1,1 +1,48 @@
 # Bigdata-Project
+프로젝트명: 게임 내 어뷰징 및 매크로 유저 실시간 탐지 시스템
+1. 문제 정의 (Problem Definition)
+🚩 해결하고자 하는 문제
+게임 내 생태계 파괴 방어: 매크로(봇) 및 어뷰징 유저는 게임 내 재화 인플레이션을 유발하고 일반 유저의 의욕을 상실시킵니다.
+
+비정상 패턴 식별: 인간의 반응 속도로는 불가능한 입력 패턴이나, 특정 경로만을 반복적으로 이동하는 '봇 특유의 행동'을 데이터 기반으로 감지하고자 합니다.
+
+📊 수집 및 사용 데이터
+유저 행동 로그 (User Action Logs): 클릭 좌표, 입력 시간 간격(Latency), 이동 경로(Coordinate), 아이템 획득 빈도.
+
+성능 지표 (Performance Metrics): 사격 정확도(Hit Rate), 분당 행동 수(APM), 초당 재화 획득량.
+
+데이터 출처: Kaggle의 PUBG/Dota2 매치 데이터셋 또는 가상의 게임 로그 제너레이터를 통한 시뮬레이션 데이터.
+
+2. 기술 스택 (Tech Stack)
+본 프로젝트는 대용량 로그를 지연 없이 처리하고 분석하기 위해 다음과 같은 빅데이터 에코시스템을 사용합니다.
+
+데이터 수집 및 전송: Apache Kafka (실시간 로그 스트리밍을 위한 메시지 큐)
+
+데이터 처리/엔지니어링: Apache Spark (Structured Streaming) (실시간 데이터 정제 및 특징 추출)
+
+데이터 저장: Hadoop HDFS (대용량 로그 저장) 및 Elasticsearch (탐지된 유저 검색)
+
+데이터 분석/ML: PySpark MLlib (Isolation Forest 또는 K-Means를 이용한 이상 탐지 모델)
+
+시각화: Grafana (실시간 어뷰징 의심 유저 모니터링 대시보드)
+
+3. 구현 계획 (Implementation Pipeline)
+데이터의 흐름에 따른 파이프라인 단계는 다음과 같습니다.
+
+[Step 1] 데이터 수집 (Ingestion)
+게임 서버에서 발생하는 유저 로그를 Kafka Producer를 통해 스트리밍 형태로 수집합니다. 각 유저의 ID, 행동 유형, 타임스탬프를 포함합니다.
+
+[Step 2] 실시간 전처리 (Stream Processing)
+Spark Streaming을 사용하여 윈도우(Window) 단위로 데이터를 집계합니다.
+
+예: 최근 5분간 유저의 클릭 간격 표준편차 계산 (매크로는 표준편차가 극도로 낮음).
+
+[Step 3] 모델링 및 탐지 (ML & Detection)
+정제된 데이터를 학습된 머신러닝 모델에 통과시켜 '어뷰징 점수'를 산출합니다.
+
+특징(Feature): 이동 경로의 복잡도, 특정 행동의 반복 주기, 승률 급상승 구간 등.
+
+[Step 4] 저장 및 알림 (Storage & Action)
+전체 로그는 사후 분석을 위해 HDFS에 적재합니다.
+
+이상 점수가 임계치를 넘는 유저는 Elasticsearch에 인덱싱하여 관리자 페이지(Grafana)에 실시간 경고를 띄웁니다.
